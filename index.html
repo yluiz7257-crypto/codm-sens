@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculadora de Sensibilidade • COD Mobile</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+  </style>
+</head>
+<body class="bg-[#0a0a0a] text-gray-100 min-h-screen">
+
+  <!-- Header -->
+  <header class="border-b border-neutral-800 bg-[#111111]">
+    <div class="max-w-4xl mx-auto px-4 py-6">
+      <h1 class="text-2xl md:text-3xl font-bold text-center tracking-tight">
+        Calculadora de Sensibilidade
+      </h1>
+      <p class="text-center text-neutral-400 text-sm mt-1">
+        Call of Duty Mobile • FOV • Miras • FOV Sync
+      </p>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-4 py-8">
+
+    <!-- Card de Inputs -->
+    <div class="bg-[#141414] border border-neutral-800 rounded-2xl p-6 mb-8">
+      <h2 class="text-lg font-semibold mb-6 text-neutral-200">Configurações</h2>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <div>
+          <label class="block text-sm text-neutral-400 mb-1.5">FOV Atual</label>
+          <input type="number" id="fovAtual" value="65" min="51" max="90"
+                 class="w-full bg-[#0f0f0f] border border-neutral-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500 transition">
+        </div>
+
+        <div>
+          <label class="block text-sm text-neutral-400 mb-1.5">FOV Desejado</label>
+          <input type="number" id="fovNovo" value="75" min="51" max="90"
+                 class="w-full bg-[#0f0f0f] border border-neutral-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500 transition">
+        </div>
+
+        <div>
+          <label class="block text-sm text-neutral-400 mb-1.5">Sensibilidade Standard</label>
+          <input type="number" id="sensStandard" value="80" min="1" max="300"
+                 class="w-full bg-[#0f0f0f] border border-neutral-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500 transition">
+        </div>
+
+        <div>
+          <label class="block text-sm text-neutral-400 mb-1.5">Escala Global (%)</label>
+          <input type="number" id="escala" value="100" min="50" max="150"
+                 class="w-full bg-[#0f0f0f] border border-neutral-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500 transition">
+        </div>
+      </div>
+
+      <!-- FOV Sync -->
+      <div class="mt-6 flex items-start gap-3">
+        <input type="checkbox" id="fovSync" 
+               class="mt-1 w-5 h-5 rounded accent-orange-500 cursor-pointer">
+        <div>
+          <label for="fovSync" class="text-sm font-medium cursor-pointer">
+            FOV Sync ligado
+          </label>
+          <p class="text-xs text-neutral-500 mt-0.5">
+            Ajusta automaticamente a sensibilidade de ADS (+14%)
+          </p>
+        </div>
+      </div>
+
+      <button onclick="calcular()" 
+              class="mt-8 w-full bg-orange-600 hover:bg-orange-500 active:bg-orange-700 text-white font-semibold py-3.5 rounded-xl transition-all">
+        Calcular Sensibilidades
+      </button>
+    </div>
+
+    <!-- Resultados -->
+    <div id="resultados" class="hidden">
+      <h2 class="text-lg font-semibold mb-4 text-neutral-200">Resultados</h2>
+
+      <div class="bg-[#141414] border border-neutral-800 rounded-2xl overflow-hidden">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-[#1a1a1a] text-neutral-400 text-left">
+              <th class="px-6 py-4 font-medium">Tipo de Mira</th>
+              <th class="px-6 py-4 font-medium text-center">Camera</th>
+              <th class="px-6 py-4 font-medium text-center">Firing</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaResultados" class="divide-y divide-neutral-800">
+            <!-- preenchido pelo JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <p class="text-xs text-neutral-600 text-center mt-5">
+        Valores aproximados • Sempre teste no Training Ground e ajuste ±3 a 5
+      </p>
+    </div>
+
+  </main>
+
+  <footer class="text-center text-neutral-700 text-xs py-10">
+    Feito para a comunidade COD Mobile
+  </footer>
+
+  <script>
+    const multiplicadores = {
+      standard: 1.00,
+      ads: 1.25,
+      tactical: 1.55,
+      sniper: 0.85,
+      "3x": 0.75,
+      "4x": 0.60,
+      "6x": 0.45,
+      "8x": 0.35
+    };
+
+    function toRadians(deg) {
+      return deg * Math.PI / 180;
+    }
+
+    function converterFOV(sens, fovAntigo, fovNovo) {
+      return sens * (Math.tan(toRadians(fovNovo / 2)) / Math.tan(toRadians(fovAntigo / 2)));
+    }
+
+    function calcular() {
+      const fovAtual = parseFloat(document.getElementById('fovAtual').value) || 65;
+      const fovNovo = parseFloat(document.getElementById('fovNovo').value) || 75;
+      const sensStandard = parseFloat(document.getElementById('sensStandard').value) || 80;
+      const escala = (parseFloat(document.getElementById('escala').value) || 100) / 100;
+      const fovSync = document.getElementById('fovSync').checked;
+
+      let baseSens = converterFOV(sensStandard, fovAtual, fovNovo) * escala;
+      const adsBoost = fovSync ? 1.14 : 1.0;
+
+      const lista = [
+        { nome: "Standard", mult: multiplicadores.standard, boost: 1 },
+        { nome: "ADS / Red Dot / Holo", mult: multiplicadores.ads, boost: adsBoost },
+        { nome: "Tactical Scope", mult: multiplicadores.tactical, boost: 1 },
+        { nome: "Sniper Scope", mult: multiplicadores.sniper, boost: 1 },
+        { nome: "3x Scope", mult: multiplicadores["3x"], boost: 1 },
+        { nome: "4x Scope", mult: multiplicadores["4x"], boost: 1 },
+        { nome: "6x Scope", mult: multiplicadores["6x"], boost: 1 },
+        { nome: "8x Scope", mult: multiplicadores["8x"], boost: 1 }
+      ];
+
+      const tbody = document.getElementById('tabelaResultados');
+      tbody.innerHTML = '';
+
+      lista.forEach(item => {
+        const camera = Math.round(baseSens * item.mult * item.boost);
+        const firing = Math.round(camera * 0.97);
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-[#1a1a1a] transition";
+        tr.innerHTML = `
+          <td class="px-6 py-4 font-medium text-neutral-200">${item.nome}</td>
+          <td class="px-6 py-4 text-center text-orange-500 font-semibold text-base">${camera}</td>
+          <td class="px-6 py-4 text-center text-neutral-400">${firing}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('resultados').classList.remove('hidden');
+    }
+
+    // Calcula ao carregar a página
+    window.onload = calcular;
+  </script>
+</body>
+</html>
